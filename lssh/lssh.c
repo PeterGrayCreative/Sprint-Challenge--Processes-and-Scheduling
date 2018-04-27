@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define PROMPT "lambda-shell$ "
+#define PROMPT "lambda-shell"
 
 #define MAX_TOKENS 100
 #define COMMANDLINE_BUFSIZE 1024
@@ -64,8 +64,13 @@ int main(void) {
 
   // Shell loops forever (until we tell it to exit)
   while (1) {
+    // Get Working directory
+    char curr[1024];
+    getcwd(curr, sizeof(curr));
+
     // Print a prompt
-    printf("%s", PROMPT);
+    printf("\x1b[31m%s\x1b[32m->\x1b[31mcwd:\x1b[36m%s \x1b[0m$ ", PROMPT,
+           curr);
     fflush(stdout);  // Force the line above to print
 
     // Read input from keyboard
@@ -99,20 +104,30 @@ int main(void) {
     }
 
 #endif
-
+    while (waitpid(-1, NULL, WNOHANG) > 0)
+      ;
     /* Add your code for implementing the shell's logic here */
-    if (args[0] == 'cd') {
-      continue;
-    }
-    else if (args[0] == 'exit') {
-      break;
-    } 
-    else {
+    if (strcmp(args[0], "cd") == 0) {
+      if (args[1] != NULL) {
+        if (chdir(args[1]) == -1) {
+          perror("chdir error");
+        }
+      } else {
+        perror("Need Second Arg");
+      }
+    } else if (strcmp(args[0], "exit") == 0) {
+      return 0;
+    } else {
       int child;
-      if (child = fork() == 0) {
+      if ((child = fork()) == 0) {
+        if (strcmp(args[args_count - 1], "&") == 0) {
+          args[args_count - 1] = NULL;
+        }
         execvp(args[0], args);
       } else {
-        int wc = waitpid(child, NULL, 0);
+        if (strcmp(args[args_count - 1], "&") != 0) {
+          int wc = waitpid(child, NULL, 0);
+        }
       }
     }
   }
