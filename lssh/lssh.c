@@ -104,6 +104,9 @@ int main(void) {
     }
 
 #endif
+    if (strcmp(args[0], "exit") == 0) {
+      return 0;
+    }
     while (waitpid(-1, NULL, WNOHANG) > 0)
       ;
     /* Add your code for implementing the shell's logic here */
@@ -115,8 +118,6 @@ int main(void) {
       } else {
         perror("Need Second Arg");
       }
-    } else if (strcmp(args[0], "exit") == 0) {
-      return 0;
     } else {
       int child;
       if ((child = fork()) == 0) {
@@ -126,7 +127,7 @@ int main(void) {
         execvp(args[0], args);
       } else {
         if (strcmp(args[args_count - 1], "&") != 0) {
-          int wc = waitpid(child, NULL, 0);
+          waitpid(child, NULL, 0);
         }
       }
     }
